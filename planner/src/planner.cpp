@@ -15,25 +15,28 @@ double current_roll = 0.0, current_pitch = 0.0, current_yaw = 0.0;
 float desired_x = 0.0, desired_y = 0.0, desired_z = 1.5;
 
 float obst_x = 0.0, obst_y = 0.0, obst_dist = 0.0;
-double obst_thresh = 1.5; // threshold for obstacle distance from origin
+double obst_thresh = 2.0; // threshold for obstacle distance from origin
 int no_obst_timer = 0;
 bool return_to_origin = false;
 
 float range_array[3][8] = {0.0};
 float average_range[8] = {0.0};
 const float range_yaw[8] = {180-22.5, 180+22.5, 270-22.5, 270+22.5, -22.5, 22.5, 90-22.5, 90+22.5 };
+float min_range; int min_id;
+
+string desired_mode = "0";
 
 int takeoff_timer = 0;
-string desired_mode = "0";
-const float desired_takeoff_time = 3;
+const float desired_takeoff_time = 1;
 
-float min_range; int min_id;
+int land_timer = 0;
+const float desired_land_time = 2;
 
 void TerarangerMessageReceived(const sensor_msgs::LaserScan& rangesMsg) {
 
 	//rangesMsg.ranges[i]
-	min_range = 100.0;	min_id = 0;
-	for(int i = 0; i<=7; i++)
+	min_range = 100.0;	min_id = 1;
+	for(int i = 1; i<=7; i++)
 	{
 		range_array[0][i] = range_array[1][i];
 		range_array[1][i] = range_array[2][i];
@@ -68,9 +71,10 @@ void TerarangerMessageReceived(const sensor_msgs::LaserScan& rangesMsg) {
 
 	ROS_INFO("desX: %0.2f, desY: %0.2f", desired_x, desired_y);
 
-	DesiredPoseStamped.pose.position.x = desired_x;
+/*	DesiredPoseStamped.pose.position.x = desired_x;
 	DesiredPoseStamped.pose.position.y = desired_y;
 	DesiredPoseStamped.pose.position.z = desired_z;
+*/
 }
 
 //not activated for now
@@ -88,7 +92,7 @@ void CurrentPoseMessageReceived(const geometry_msgs::PoseStamped& poseMsg) {
 	tf::Quaternion quat(poseMsg.pose.orientation.x, poseMsg.pose.orientation.y, poseMsg.pose.orientation.z, poseMsg.pose.orientation.w);
 	tf::Matrix3x3 m(quat);
 	m.getRPY(current_roll, current_pitch, current_yaw);
-	current_yaw = -(current_yaw - M_PI/2);
+	current_yaw = -(current_yaw - M_PI/2);	//yaw with up axis
 }
 
 int main(int argc, char **argv)
@@ -107,7 +111,7 @@ int main(int argc, char **argv)
 
    DesiredPoseStamped.pose.position.x = 0.0;		
    DesiredPoseStamped.pose.position.y = 0.0;		
-   DesiredPoseStamped.pose.position.z = 1.5;		
+   DesiredPoseStamped.pose.position.z = -1.0;		
 
    int count = 0;
 
@@ -127,7 +131,78 @@ int main(int argc, char **argv)
 	       DesiredPoseStamped.pose.position.y = 0.0;
 	       DesiredPoseStamped.pose.position.z = 1.5;			
 	}
+	else if(desired_mode.compare("T")==0)
+	{
 
+	       DesiredPoseStamped.pose.position.x = current_x;
+	       DesiredPoseStamped.pose.position.y = current_y;
+	       DesiredPoseStamped.pose.position.z = 1.5*(float)takeoff_timer/(10.0*desired_takeoff_time);			
+	
+		if(DesiredPoseStamped.pose.position.z  > 1.5)
+		{	
+			DesiredPoseStamped.pose.position.x = 0.0;
+			DesiredPoseStamped.pose.position.y = 0.0;
+			DesiredPoseStamped.pose.position.z = 1.5;
+		}
+	
+		takeoff_timer++;
+
+	}
+	else if(desired_mode.compare("L")==0)
+	{
+	       DesiredPoseStamped.pose.position.x = current_x;
+	       DesiredPoseStamped.pose.position.y = current_y;
+	       DesiredPoseStamped.pose.position.z = 1.5 - 2.5*(float)land_timer/(10.0*desired_land_time);
+
+		
+		if(DesiredPoseStamped.pose.position.z  < -10.0)
+		{	
+			DesiredPoseStamped.pose.position.x = 0.0;
+			DesiredPoseStamped.pose.position.y = 0.0;
+			DesiredPoseStamped.pose.position.z = -10.0;
+		}
+	
+		land_timer++;			
+	}
+	else if(desired_mode.compare("A")==0)
+	{
+	       DesiredPoseStamped.pose.position.x = desired_x;
+	       DesiredPoseStamped.pose.position.y = desired_y;
+	       DesiredPoseStamped.pose.position.z = desired_z;			
+	}
+	else if(desired_mode.compare("N")==0)
+	{
+	       DesiredPoseStamped.pose.position.x = 0.0;
+	       DesiredPoseStamped.pose.position.y = 1.0;
+	       DesiredPoseStamped.pose.position.z = 1.5;			
+	}
+
+	else if(desired_mode.compare("S")==0)
+	{
+	       DesiredPoseStamped.pose.position.x = 0.0;
+	       DesiredPoseStamped.pose.position.y = -1.0;
+	       DesiredPoseStamped.pose.position.z = 1.5;			
+	}
+
+	else if(desired_mode.compare("E")==0)
+	{
+	       DesiredPoseStamped.pose.position.x = 1.0;
+	       DesiredPoseStamped.pose.position.y = 0.0;
+	       DesiredPoseStamped.pose.position.z = 1.5;			
+	}
+
+	else if(desired_mode.compare("W")==0)
+	{
+	       DesiredPoseStamped.pose.position.x = -1.0;
+	       DesiredPoseStamped.pose.position.y = 0.0;
+	       DesiredPoseStamped.pose.position.z = 1.5;			
+	}
+	else
+	{
+	       DesiredPoseStamped.pose.position.x = 0.0;
+	       DesiredPoseStamped.pose.position.y = 0.0;
+	       DesiredPoseStamped.pose.position.z = -10.0;			
+	}
 
 //	cout << desired_mode << endl;
 	count++;
