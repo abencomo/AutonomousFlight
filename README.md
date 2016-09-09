@@ -2,14 +2,14 @@
 
 Indoor autonomous flight using a downward facing camera and multiple apriltags for localization, together with a ring of 8 range sensors for obstacle avoidance.
 
+![1-1](https://raw.githubusercontent.com/akshayshetty/images/master/AutonomousFlight.png)
+
 ### Equipment used:
 
 * MatrixVision Camera
 * Odroid XU4
 * Pixhawk Flight Controller with PX4 stack
 * Teraranger Tower
-
-![1-1](https://raw.githubusercontent.com/akshayshetty/images/master/AutonomousFlight.png)
 
 ## Setting up new SD card for Odroid:
 
