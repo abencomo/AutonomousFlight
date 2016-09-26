@@ -16,7 +16,7 @@ Indoor autonomous flight using a downward facing camera and multiple apriltags f
 ### OS and Memory:
 
 * From http://odroid.in/ubuntu_14.04lts/ download *ubuntu-14.04.1lts-lubuntu-odroid-xu3-20150212.img.xz* image file to your computer. Flash this image onto the SD card
-* Power up Odroid with the SD card, and expand memory using Odroid Utility and reboot
+* Power up Odroid with the SD card, and resize your root partition using Odroid Utility and reboot
 
 ### ROS barebones:
 
